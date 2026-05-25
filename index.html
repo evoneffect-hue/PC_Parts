@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>PC Parts - Магазин компьютерных комплектующих</title>
+    <link rel="icon" href="логотип.jpg" type="image/x-icon">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+</head>
+
+<body>
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <!-- КНОПКА НАВЕРХ -->
+    <button class="back-to-top" onclick="scrollToTop()" title="Наверх">↑</button>
+    
+    <!-- КНОПКА ПОДДЕРЖКИ -->
+    <button class="support-button" id="supportButton" onclick="toggleSupportChat()">
+        <span class="support-icon"></span>
+        <span class="support-text">Поддержка</span>
+    </button>
+    
+    <!-- ЧАТ ПОДДЕРЖКИ -->
+    <div class="support-chat" id="supportChat" style="display: none;">
+        <div class="support-chat-header">
+            <div class="support-chat-title"><span class="support-chat-icon"></span><span>Поддержка</span></div>
+            <button class="support-chat-close" onclick="toggleSupportChat()">×</button>
+        </div>
+        <div class="support-chat-messages" id="supportMessages">
+            <div class="support-message support-message-bot">
+                <div class="message-avatar"></div>
+                <div class="message-content">
+                    <div class="message-sender">Техподдержка</div>
+                    <div class="message-text">Здравствуйте! Чем могу помочь? </div>
+                    <div class="message-time">Сейчас</div>
+                </div>
+            </div>
+        </div>
+        <div class="support-chat-input">
+            <input type="text" id="supportInput" placeholder="Введите сообщение..." onkeypress="handleSupportKeyPress(event)">
+            <button onclick="sendSupportMessage()">Отправить</button>
+        </div>
+        <div class="support-chat-footer"><span>Обычно отвечаем в течение 5 минут</span></div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО ВХОДА И РЕГИСТРАЦИИ -->
+    <div id="authModal" class="modal">
+        <div class="modal-content glass-effect">
+            <span class="close" onclick="closeModal()">×</span>
+            <div class="modal-header">
+                <div class="modal-logo">PC<span class="accent">Parts</span></div>
+                <h2 id="modalTitle">Вход в аккаунт</h2>
+            </div>
+            
+            <!-- ФОРМА ВХОДА -->
+            <div id="loginForm">
+                <form id="authForm">
+                    <div class="input-group">
+                        <input type="email" id="loginEmail" placeholder=" " required>
+                        <label for="loginEmail">Email</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="loginPassword" placeholder=" " required>
+                        <label for="loginPassword">Пароль</label>
+                    </div>
+                    <button type="submit" class="submit-btn">Войти</button>
+                    <div class="switch-mode" onclick="showRegistrationForm()">У вас нет аккаунта? <strong>Зарегистрироваться</strong></div>
+                    <div class="forgot-password" onclick="showForgotPasswordForm()">Забыли пароль?</div>
+                </form>
+            </div>
+            
+            <!-- ФОРМА РЕГИСТРАЦИИ -->
+            <div id="registerForm" style="display: none;">
+                <form id="registerFormElement">
+                    <div class="input-group">
+                        <input type="text" id="regName" placeholder=" " required>
+                        <label for="regName">Имя</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="regSurname" placeholder=" ">
+                        <label for="regSurname">Фамилия (необязательно)</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="email" id="regEmail" placeholder=" " required>
+                        <label for="regEmail">Email</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="regPassword" placeholder=" " required>
+                        <label for="regPassword">Пароль</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="regPasswordConfirm" placeholder=" " required>
+                        <label for="regPasswordConfirm">Подтвердите пароль</label>
+                    </div>
+                    <button type="submit" class="submit-btn">Зарегистрироваться</button>
+                    <div class="switch-mode" onclick="showLoginForm()">Уже есть аккаунт? <strong>Войти</strong></div>
+                </form>
+            </div>
+            
+            <div id="authMessage" class="auth-message"></div>
+        </div>
+    </div>
+
+    <!-- ВОССТАНОВЛЕНИЕ ПАРОЛЯ -->
+    <div id="forgotModal" class="modal">
+        <div class="modal-content glass-effect" style="max-width: 450px;">
+            <span class="close" onclick="closeForgotModal()">×</span>
+            <div class="modal-header">
+                <div class="modal-logo">PC<span class="accent">Parts</span></div>
+                <h2>Восстановление пароля</h2>
+            </div>
+            <div id="forgotStep1">
+                <p>Введите ваш email, мы отправим ссылку для сброса пароля.</p>
+                <div class="input-group"><input type="email" id="forgotEmail" placeholder=" " required><label for="forgotEmail">Email</label></div>
+                <button class="submit-btn" onclick="sendResetLink()">Отправить ссылку</button>
+                <div class="switch-mode" onclick="closeForgotModal()">Вернуться ко входу</div>
+            </div>
+            <div id="forgotStep2" style="display: none;">
+                <p>Введите новый пароль.</p>
+                <div class="input-group"><input type="password" id="resetPassword" placeholder=" " required><label for="resetPassword">Новый пароль</label></div>
+                <div class="input-group"><input type="password" id="resetPasswordConfirm" placeholder=" " required><label for="resetPasswordConfirm">Подтвердите пароль</label></div>
+                <button class="submit-btn" onclick="resetPassword()">Сбросить пароль</button>
+                <div class="switch-mode" onclick="closeForgotModal()">Вернуться ко входу</div>
+            </div>
+            <div id="forgotMessage" class="auth-message"></div>
+        </div>
+    </div>
+
+    <!-- ШАПКА -->
+    <header class="glass-header">
+        <div class="header-container">
+            <div class="logo" onclick="showCatalog()">
+                <img src="логотип.jpg" alt="Логотип" class="logo-img">
+                <span class="logo-text">PC<span class="logo-accent">Parts</span></span>
+            </div>
+            <div class="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+            <nav>
+                <ul>
+                    <li><a href="#" onclick="showCatalog(); closeMenu(); return false;" class="nav-link" id="nav-catalog"><span class="nav-text">Каталог</span></a></li>
+                    <li><a href="#" onclick="showAboutPage(); closeMenu(); return false;" class="nav-link" id="nav-about"><span class="nav-text">О нас</span></a></li>
+                    <li><a href="#" onclick="showAdvantages(); closeMenu(); return false;" class="nav-link" id="nav-advantages"><span class="nav-text">Преимущества</span></a></li>
+                    <li><a href="#" onclick="showFavorites(); closeMenu(); return false;" class="nav-link" id="nav-favorites"><span class="nav-text">Избранное</span></a></li>
+                    <li><a href="#" onclick="showSupportPage(); closeMenu(); return false;" class="nav-link" id="nav-support"><span class="nav-text">Поддержка</span></a></li>
+                    <li id="navProfileItem">
+                        <a href="#" onclick="showProfilePage(); closeMenu(); return false;" class="nav-link" id="nav-profile" style="display: flex;">Личный кабинет</a>
+                        <div class="nav-avatar-container" id="navAvatarContainer" style="display: none;" onclick="showProfilePage()">
+                            <div class="nav-avatar-circle"><img id="navAvatarImg" class="nav-avatar-img" src="images/default-avatar.png" alt="Аватар"><span id="navAvatarPlaceholder" class="nav-avatar-placeholder">👤</span></div>
+                            <span class="nav-avatar-name" id="navAvatarName"></span>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
+            <div class="contact-info" id="contactInfo">
+                <div class="contact-info-wrapper">
+                    <div class="phone-wrapper"><span class="phone-icon">📞</span><span class="phone-number">+7 (950) 593-25-66</span></div>
+                    <button id="login-btn" class="login-btn" onclick="openModal()"><span class="btn-icon">👤</span><span class="btn-text">Войти</span></button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ - КАТАЛОГ -->
+    <main class="catalog-section" id="catalog-section">
+        <div class="section-header">
+            <h2 class="section-title" id="section-title">Категории:</h2>
+            <div class="title-decoration"></div>
+        </div>
+        <div class="category-buttons-wrapper">
+            <div class="category-buttons" id="category-buttons">
+                <button onclick="showCategory('processors')" data-category="processors" class="category-btn"><span class="btn-text">Процессоры</span></button>
+                <button onclick="showCategory('motherboards')" data-category="motherboards" class="category-btn"><span class="btn-text">Материнские платы</span></button>
+                <button onclick="showCategory('graphics-cards')" data-category="graphics-cards" class="category-btn"><span class="btn-text">Видеокарты</span></button>
+                <button onclick="showCategory('ssds')" data-category="ssds" class="category-btn"><span class="btn-text">SSD</span></button>
+                <button onclick="showCategory('power-supplies')" data-category="power-supplies" class="category-btn"><span class="btn-text">Блоки питания</span></button>
+                <button onclick="showCategory('coolers')" data-category="coolers" class="category-btn"><span class="btn-text">Кулеры</span></button>
+                <button onclick="showCategory('monitors')" data-category="monitors" class="category-btn"><span class="btn-text">Мониторы</span></button>
+                <button onclick="showCategory('keyboards')" data-category="keyboards" class="category-btn"><span class="btn-text">Клавиатуры</span></button>
+                <button onclick="showCategory('mice')" data-category="mice" class="category-btn"><span class="btn-text">Мышки</span></button>
+                <button onclick="showCategory('headphones')" data-category="headphones" class="category-btn"><span class="btn-text">Наушники</span></button>
+                <button onclick="showCategory('all')" data-category="all" class="category-btn active"><span class="btn-text">Все</span></button>
+                <button id="clear-favorites-btn" class="clear-favorites-btn" onclick="clearAllFavorites()" style="display: none;"><span class="btn-icon">🗑️</span><span class="btn-text">Очистить избранное</span></button>
+            </div>
+        </div>
+
+        <div id="noFavoritesMessage" class="no-favorites-message glass-card">
+            <div class="message-icon"></div>
+            <h3>У вас пока нет избранных товаров</h3>
+            <p>Добавляйте товары в избранное, нажимая на сердечко ♡</p>
+        </div>
+
+        <!-- ПОПУЛЯРНЫЕ ТОВАРЫ -->
+        <section id="popular-products" class="products-section">
+            <div class="section-header">
+                <h2 class="section-title">Популярные товары:</h2>
+            </div>
+            <div class="products-scroll-container">
+                <button class="scroll-btn scroll-left" onclick="scrollProducts('popular', -1)">❮</button>
+                <div class="product-list" id="popularProductList">
+                    <!-- Процессоры -->
+                    <div class="product-card glass-card processors" data-id="processor1" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"processor1","name":"Intel Core i9-12900K","price":"65000","image":"images/processor-intel-core-i9.jpg","category":"processors","description":"Сокет: LGA1700 | 16 ядер | до 5.2 GHz"}'>♡</button>
+                        <div class="product-image"><img src="images/processor-intel-core-i9.jpg" alt="Intel Core i9"></div>
+                        <h3>Intel Core i9-12900K</h3>
+                        <p>16 ядер, до 5.2 GHz, LGA1700</p>
+                        <div class="product-price">65 000 ₽</div>
+                    </div>
+                    <div class="product-card glass-card processors" data-id="processor2" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"processor2","name":"AMD Ryzen 7 5800X","price":"38000","image":"images/processor-amd-ryzen-7.jpg","category":"processors","description":"Сокет: AM4 | 8 ядер | до 4.7 GHz"}'>♡</button>
+                        <div class="product-image"><img src="images/processor-amd-ryzen-7.jpg" alt="AMD Ryzen 7"></div>
+                        <h3>AMD Ryzen 7 5800X</h3>
+                        <p>8 ядер, до 4.7 GHz, AM4</p>
+                        <div class="product-price">38 000 ₽</div>
+                    </div>
+                    <div class="product-card glass-card processors" data-id="processor3" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"processor3","name":"Intel Core i7-12700","price":"34500","image":"images/processor-intel-core-i7.jpg","category":"processors","description":"Сокет: LGA1700 | 12 ядер | до 4.9 GHz"}'>♡</button>
+                        <div class="product-image"><img src="images/processor-intel-core-i7.jpg" alt="Intel Core i7"></div>
+                        <h3>Intel Core i7-12700</h3>
+                        <p>12 ядер, до 4.9 GHz, LGA1700</p>
+                        <div class="product-price">34 500 ₽</div>
+                    </div>
+                    <!-- Материнские платы -->
+                    <div class="product-card glass-card motherboards" data-id="motherboard1" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"motherboard1","name":"ASUS Prime Z390-A","price":"29990","image":"images/asus-motherboard.jpg","category":"motherboards","description":"Сокет: LGA1151 | Чипсет: Z390"}'>♡</button>
+                        <div class="product-image"><img src="images/asus-motherboard.jpg" alt="ASUS Prime Z390-A"></div>
+                        <h3>ASUS Prime Z390-A</h3>
+                        <p>LGA1151, Z390, ATX</p>
+                        <div class="product-price">29 990 ₽</div>
+                    </div>
+                    <div class="product-card glass-card motherboards" data-id="motherboard2" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"motherboard2","name":"MSI MPG Z490","price":"25500","image":"images/msi-motherboard.jpg","category":"motherboards","description":"Сокет: LGA1200 | Чипсет: Z490"}'>♡</button>
+                        <div class="product-image"><img src="images/msi-motherboard.jpg" alt="MSI MPG Z490"></div>
+                        <h3>MSI MPG Z490</h3>
+                        <p>LGA1200, Z490, ATX</p>
+                        <div class="product-price">25 500 ₽</div>
+                    </div>
+                    <div class="product-card glass-card motherboards" data-id="motherboard3" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"motherboard3","name":"ASRock X570","price":"34000","image":"images/asrock-motherboard.jpg","category":"motherboards","description":"Сокет: AM4 | Чипсет: X570"}'>♡</button>
+                        <div class="product-image"><img src="images/asrock-motherboard.jpg" alt="ASRock X570"></div>
+                        <h3>ASRock X570</h3>
+                        <p>AM4, X570, PCIe 4.0</p>
+                        <div class="product-price">34 000 ₽</div>
+                    </div>
+                    <!-- Видеокарты -->
+                    <div class="product-card glass-card graphics-cards" data-id="gpu1" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"gpu1","name":"NVIDIA RTX 3080","price":"79990","image":"images/nvidia-gtx-3080.jpg","category":"graphics-cards","description":"10 ГБ GDDR6X | до 1710 МГц"}'>♡</button>
+                        <div class="product-image"><img src="images/nvidia-gtx-3080.jpg" alt="NVIDIA RTX 3080"></div>
+                        <h3>NVIDIA RTX 3080</h3>
+                        <p>10 ГБ GDDR6X, до 1710 МГц</p>
+                        <div class="product-price">79 990 ₽</div>
+                    </div>
+                    <div class="product-card glass-card graphics-cards" data-id="gpu2" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"gpu2","name":"NVIDIA RTX 3070","price":"55800","image":"images/Nvidia-gtx-3070.jpg","category":"graphics-cards","description":"8 ГБ GDDR6 | до 1725 МГц"}'>♡</button>
+                        <div class="product-image"><img src="images/Nvidia-gtx-3070.jpg" alt="NVIDIA RTX 3070"></div>
+                        <h3>NVIDIA RTX 3070</h3>
+                        <p>8 ГБ GDDR6, до 1725 МГц</p>
+                        <div class="product-price">55 800 ₽</div>
+                    </div>
+                    <div class="product-card glass-card graphics-cards" data-id="gpu3" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"gpu3","name":"AMD Radeon RX 6800","price":"51000","image":"images/amd-radeon-rx-6800.jpg","category":"graphics-cards","description":"16 ГБ GDDR6 | до 2105 МГц"}'>♡</button>
+                        <div class="product-image"><img src="images/amd-radeon-rx-6800.jpg" alt="AMD Radeon RX 6800"></div>
+                        <h3>AMD Radeon RX 6800</h3>
+                        <p>16 ГБ GDDR6, до 2105 МГц</p>
+                        <div class="product-price">51 000 ₽</div>
+                    </div>
+                    <!-- SSD -->
+                    <div class="product-card glass-card ssds" data-id="ssd1" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"ssd1","name":"Samsung EVO 970 500GB","price":"5700","image":"images/samsung-evo-970.jpg","category":"ssds","description":"500 ГБ | до 3500 МБ/с"}'>♡</button>
+                        <div class="product-image"><img src="images/samsung-evo-970.jpg" alt="Samsung EVO 970"></div>
+                        <h3>Samsung EVO 970 500GB</h3>
+                        <p>500 ГБ, до 3500 МБ/с, NVMe</p>
+                        <div class="product-price">5 700 ₽</div>
+                    </div>
+                    <div class="product-card glass-card ssds" data-id="ssd2" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"ssd2","name":"WD Black SN750 500GB","price":"6200","image":"images/western-digital-ssd.jpg","category":"ssds","description":"500 ГБ | до 3430 МБ/с"}'>♡</button>
+                        <div class="product-image"><img src="images/western-digital-ssd.jpg" alt="WD Black SN750"></div>
+                        <h3>WD Black SN750 500GB</h3>
+                        <p>500 ГБ, до 3430 МБ/с, NVMe</p>
+                        <div class="product-price">6 200 ₽</div>
+                    </div>
+                    <div class="product-card glass-card ssds" data-id="ssd3" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"ssd3","name":"Kingston A2000 500GB","price":"4500","image":"images/kingston-ssd.jpg","category":"ssds","description":"500 ГБ | до 2200 МБ/с"}'>♡</button>
+                        <div class="product-image"><img src="images/kingston-ssd.jpg" alt="Kingston A2000"></div>
+                        <h3>Kingston A2000 500GB</h3>
+                        <p>500 ГБ, до 2200 МБ/с, NVMe</p>
+                        <div class="product-price">4 500 ₽</div>
+                    </div>
+                    <!-- Блоки питания -->
+                    <div class="product-card glass-card power-supplies" data-id="psu1" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"psu1","name":"Be Quiet Straight Power 11 750W","price":"12990","image":"images/be-quiet-power-supply.jpg","category":"power-supplies","description":"750 Вт | 80 Plus Platinum"}'>♡</button>
+                        <div class="product-image"><img src="images/be-quiet-power-supply.jpg" alt="Be Quiet Power"></div>
+                        <h3>Be Quiet Straight Power 11 750W</h3>
+                        <p>750 Вт, 80 Plus Platinum</p>
+                        <div class="product-price">12 990 ₽</div>
+                    </div>
+                    <div class="product-card glass-card power-supplies" data-id="psu2" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"psu2","name":"Corsair RM850x 850W","price":"11500","image":"images/corsair-power-supply.jpg","category":"power-supplies","description":"850 Вт | 80 Plus Gold"}'>♡</button>
+                        <div class="product-image"><img src="images/corsair-power-supply.jpg" alt="Corsair RM850x"></div>
+                        <h3>Corsair RM850x 850W</h3>
+                        <p>850 Вт, 80 Plus Gold, модульный</p>
+                        <div class="product-price">11 500 ₽</div>
+                    </div>
+                    <div class="product-card glass-card power-supplies" data-id="psu3" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"psu3","name":"Seasonic Focus GX-750 750W","price":"9800","image":"images/seasonic-power-supply.jpg","category":"power-supplies","description":"750 Вт | 80 Plus Gold"}'>♡</button>
+                        <div class="product-image"><img src="images/seasonic-power-supply.jpg" alt="Seasonic"></div>
+                        <h3>Seasonic Focus GX-750 750W</h3>
+                        <p>750 Вт, 80 Plus Gold, модульный</p>
+                        <div class="product-price">9 800 ₽</div>
+                    </div>
+                    <!-- Кулеры -->
+                    <div class="product-card glass-card coolers" data-id="cooler1" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"cooler1","name":"Noctua NH-D15","price":"8990","image":"images/noctua-nh-d15.jpg","category":"coolers","description":"2x140 мм | TDP до 220 Вт"}'>♡</button>
+                        <div class="product-image"><img src="images/noctua-nh-d15.jpg" alt="Noctua NH-D15"></div>
+                        <h3>Noctua NH-D15</h3>
+                        <p>2x140 мм, TDP до 220 Вт</p>
+                        <div class="product-price">8 990 ₽</div>
+                    </div>
+                    <div class="product-card glass-card coolers" data-id="cooler2" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"cooler2","name":"Cooler Master Hyper 212","price":"2500","image":"images/cooler-master-hyper-212.jpg","category":"coolers","description":"120 мм | TDP до 150 Вт"}'>♡</button>
+                        <div class="product-image"><img src="images/cooler-master-hyper-212.jpg" alt="Hyper 212"></div>
+                        <h3>Cooler Master Hyper 212</h3>
+                        <p>120 мм, TDP до 150 Вт</p>
+                        <div class="product-price">2 500 ₽</div>
+                    </div>
+                    <div class="product-card glass-card coolers" data-id="cooler3" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"cooler3","name":"Be Quiet Dark Rock 4","price":"6800","image":"images/be-quiet-dark-rock-4.jpg","category":"coolers","description":"135 мм | TDP до 200 Вт"}'>♡</button>
+                        <div class="product-image"><img src="images/be-quiet-dark-rock-4.jpg" alt="Dark Rock 4"></div>
+                        <h3>Be Quiet Dark Rock 4</h3>
+                        <p>135 мм, TDP до 200 Вт, тихий</p>
+                        <div class="product-price">6 800 ₽</div>
+                    </div>
+                    <!-- Мониторы -->
+                    <div class="product-card glass-card monitors" data-id="monitor1" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"monitor1","name":"LG UltraWide 34\"","price":"35900","image":"images/monitor-lg-ultrawide.jpg","category":"monitors","description":"34\" | 3440x1440 | IPS"}'>♡</button>
+                        <div class="product-image"><img src="images/monitor-lg-ultrawide.jpg" alt="LG UltraWide"></div>
+                        <h3>LG UltraWide 34"</h3>
+                        <p>34", 3440x1440, IPS</p>
+                        <div class="product-price">35 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card monitors" data-id="monitor2" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"monitor2","name":"Samsung 27\" UHD","price":"28900","image":"images/monitor-samsung-27.jpg","category":"monitors","description":"27\" | 4K UHD | IPS"}'>♡</button>
+                        <div class="product-image"><img src="images/monitor-samsung-27.jpg" alt="Samsung 27"></div>
+                        <h3>Samsung 27" UHD</h3>
+                        <p>27", 4K UHD, IPS, HDR10</p>
+                        <div class="product-price">28 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card monitors" data-id="monitor3" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"monitor3","name":"ASUS Gaming 27\" 144Hz","price":"24900","image":"images/monitor-asus-gaming.jpg","category":"monitors","description":"27\" | 144Hz | 1 мс"}'>♡</button>
+                        <div class="product-image"><img src="images/monitor-asus-gaming.jpg" alt="ASUS Gaming"></div>
+                        <h3>ASUS Gaming 27" 144Hz</h3>
+                        <p>27", 144 Гц, 1 мс, FreeSync</p>
+                        <div class="product-price">24 900 ₽</div>
+                    </div>
+                    <!-- Клавиатуры -->
+                    <div class="product-card glass-card keyboards" data-id="keyboard1" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"keyboard1","name":"Logitech G915","price":"18900","image":"images/keyboard-logitech-g915.jpg","category":"keyboards","description":"Беспроводная | RGB"}'>♡</button>
+                        <div class="product-image"><img src="images/keyboard-logitech-g915.jpg" alt="Logitech G915"></div>
+                        <h3>Logitech G915</h3>
+                        <p>Беспроводная, RGB, алюминий</p>
+                        <div class="product-price">18 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card keyboards" data-id="keyboard2" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"keyboard2","name":"Razer BlackWidow","price":"14900","image":"images/keyboard-razer-blackwidow.jpg","category":"keyboards","description":"Механическая | Chroma RGB"}'>♡</button>
+                        <div class="product-image"><img src="images/keyboard-razer-blackwidow.jpg" alt="Razer BlackWidow"></div>
+                        <h3>Razer BlackWidow</h3>
+                        <p>Механическая, Chroma RGB</p>
+                        <div class="product-price">14 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card keyboards" data-id="keyboard3" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"keyboard3","name":"Keychron K2","price":"8900","image":"images/keyboard-keychron-k2.jpg","category":"keyboards","description":"75% | Bluetooth"}'>♡</button>
+                        <div class="product-image"><img src="images/keyboard-keychron-k2.jpg" alt="Keychron K2"></div>
+                        <h3>Keychron K2</h3>
+                        <p>75%, Bluetooth, Mac/Windows</p>
+                        <div class="product-price">8 900 ₽</div>
+                    </div>
+                    <!-- Мышки -->
+                    <div class="product-card glass-card mice" data-id="mouse1" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"mouse1","name":"Logitech G Pro","price":"8900","image":"images/mouse-logitech-g-pro.jpg","category":"mice","description":"HERO 25K | 25600 DPI"}'>♡</button>
+                        <div class="product-image"><img src="images/mouse-logitech-g-pro.jpg" alt="Logitech G Pro"></div>
+                        <h3>Logitech G Pro</h3>
+                        <p>HERO 25K, 25600 DPI, 80 г</p>
+                        <div class="product-price">8 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card mice" data-id="mouse2" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"mouse2","name":"Razer DeathAdder V2","price":"7900","image":"images/mouse-razer-deathadder.jpg","category":"mice","description":"20K DPI | 82 г"}'>♡</button>
+                        <div class="product-image"><img src="images/mouse-razer-deathadder.jpg" alt="Razer DeathAdder"></div>
+                        <h3>Razer DeathAdder V2</h3>
+                        <p>20K DPI, Chroma RGB, 82 г</p>
+                        <div class="product-price">7 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card mice" data-id="mouse3" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"mouse3","name":"SteelSeries Aerox 3","price":"10900","image":"images/mouse-steelseries-aero.jpg","category":"mice","description":"Беспроводная | 66 г"}'>♡</button>
+                        <div class="product-image"><img src="images/mouse-steelseries-aero.jpg" alt="SteelSeries Aerox"></div>
+                        <h3>SteelSeries Aerox 3</h3>
+                        <p>Беспроводная, 66 г, 200 ч</p>
+                        <div class="product-price">10 900 ₽</div>
+                    </div>
+                    <!-- Наушники -->
+                    <div class="product-card glass-card headphones" data-id="headphone1" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"headphone1","name":"Sony WH-1000XM4","price":"29900","image":"images/headphones-sony-wh1000xm4.jpg","category":"headphones","description":"ANC | 30 ч"}'>♡</button>
+                        <div class="product-image"><img src="images/headphones-sony-wh1000xm4.jpg" alt="Sony"></div>
+                        <h3>Sony WH-1000XM4</h3>
+                        <p>ANC, 30 ч, Bluetooth</p>
+                        <div class="product-price">29 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card headphones" data-id="headphone2" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"headphone2","name":"HyperX Cloud II","price":"8900","image":"images/headphones-hyperx-cloud.jpg","category":"headphones","description":"7.1 Surround | 53 мм"}'>♡</button>
+                        <div class="product-image"><img src="images/headphones-hyperx-cloud.jpg" alt="HyperX"></div>
+                        <h3>HyperX Cloud II</h3>
+                        <p>7.1 Surround, 53 мм, USB</p>
+                        <div class="product-price">8 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card headphones" data-id="headphone3" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"headphone3","name":"Razer BlackShark V2","price":"12900","image":"images/headphones-razer-blackshark.jpg","category":"headphones","description":"THX Spatial | 50 мм"}'>♡</button>
+                        <div class="product-image"><img src="images/headphones-razer-blackshark.jpg" alt="Razer"></div>
+                        <h3>Razer BlackShark V2</h3>
+                        <p>THX Spatial, 50 мм, USB</p>
+                        <div class="product-price">12 900 ₽</div>
+                    </div>
+                </div>
+                <button class="scroll-btn scroll-right" onclick="scrollProducts('popular', 1)">❯</button>
+            </div>
+        </section>
+
+        <!-- ВСЕ ТОВАРЫ -->
+        <section id="all-products" class="products-section">
+            <div class="section-header">
+                <h2 class="section-title">Все товары:</h2>
+            </div>
+            <div class="products-scroll-container">
+                <button class="scroll-btn scroll-left" onclick="scrollProducts('all', -1)">❮</button>
+                <div class="product-list" id="allProductList">
+                    <div class="product-card glass-card processors" data-id="processor4" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"processor4","name":"Intel Core i7-12700","price":"34500","image":"images/processor-intel-core-i7.jpg","category":"processors","description":"Сокет: LGA1700 | 12 ядер"}'>♡</button>
+                        <div class="product-image"><img src="images/processor-intel-core-i7.jpg" alt="Intel Core i7"></div>
+                        <h3>Intel Core i7-12700</h3>
+                        <p>12 ядер, до 4.9 GHz, LGA1700</p>
+                        <div class="product-price">34 500 ₽</div>
+                    </div>
+                    <div class="product-card glass-card processors" data-id="processor5" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"processor5","name":"AMD Ryzen 9 9900X","price":"54900","image":"images/processor-amd-ryzen-9.jpg","category":"processors","description":"Сокет: AM5 | 12 ядер"}'>♡</button>
+                        <div class="product-image"><img src="images/processor-amd-ryzen-9.jpg" alt="AMD Ryzen 9"></div>
+                        <h3>AMD Ryzen 9 9900X</h3>
+                        <p>12 ядер, до 5.6 GHz, AM5</p>
+                        <div class="product-price">54 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card processors" data-id="processor6" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"processor6","name":"Intel Core i9-12900K","price":"65000","image":"images/processor-intel-core-i9.jpg","category":"processors","description":"Сокет: LGA1700 | 16 ядер"}'>♡</button>
+                        <div class="product-image"><img src="images/processor-intel-core-i9.jpg" alt="Intel Core i9"></div>
+                        <h3>Intel Core i9-12900K</h3>
+                        <p>16 ядер, до 5.2 GHz, LGA1700</p>
+                        <div class="product-price">65 000 ₽</div>
+                    </div>
+                    <div class="product-card glass-card processors" data-id="processor7" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"processor7","name":"AMD Ryzen 7 5800X","price":"38000","image":"images/processor-amd-ryzen-7.jpg","category":"processors","description":"Сокет: AM4 | 8 ядер"}'>♡</button>
+                        <div class="product-image"><img src="images/processor-amd-ryzen-7.jpg" alt="AMD Ryzen 7"></div>
+                        <h3>AMD Ryzen 7 5800X</h3>
+                        <p>8 ядер, до 4.7 GHz, AM4</p>
+                        <div class="product-price">38 000 ₽</div>
+                    </div>
+                    <div class="product-card glass-card processors" data-id="processor8" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"processor8","name":"Intel Core i5-13600K","price":"28900","image":"images/processor-intel-core-i5.jpg","category":"processors","description":"Сокет: LGA1700 | 14 ядер"}'>♡</button>
+                        <div class="product-image"><img src="images/processor-intel-core-i5.jpg" alt="Intel Core i5"></div>
+                        <h3>Intel Core i5-13600K</h3>
+                        <p>14 ядер, до 5.1 GHz, LGA1700</p>
+                        <div class="product-price">28 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card processors" data-id="processor9" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"processor9","name":"AMD Ryzen 5 7600X","price":"24500","image":"images/processor-amd-ryzen-5.jpg","category":"processors","description":"Сокет: AM5 | 6 ядер"}'>♡</button>
+                        <div class="product-image"><img src="images/processor-amd-ryzen-5.jpg" alt="AMD Ryzen 5"></div>
+                        <h3>AMD Ryzen 5 7600X</h3>
+                        <p>6 ядер, до 5.3 GHz, AM5</p>
+                        <div class="product-price">24 500 ₽</div>
+                    </div>
+                    <div class="product-card glass-card processors" data-id="processor10" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"processor10","name":"Intel Core i3-13100F","price":"9900","image":"images/processor-intel-core-i3.jpg","category":"processors","description":"Сокет: LGA1700 | 4 ядра"}'>♡</button>
+                        <div class="product-image"><img src="images/processor-intel-core-i3.jpg" alt="Intel Core i3"></div>
+                        <h3>Intel Core i3-13100F</h3>
+                        <p>4 ядра, до 4.5 GHz, LGA1700</p>
+                        <div class="product-price">9 900 ₽</div>
+                    </div>
+                    <!-- Материнские платы -->
+                    <div class="product-card glass-card motherboards" data-id="motherboard4" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"motherboard4","name":"Gigabyte B450 AORUS","price":"12990","image":"images/gigabyte-motherboard.jpg","category":"motherboards","description":"Сокет: AM4 | Чипсет: B450"}'>♡</button>
+                        <div class="product-image"><img src="images/gigabyte-motherboard.jpg" alt="Gigabyte B450"></div>
+                        <h3>Gigabyte B450 AORUS</h3>
+                        <p>AM4, B450, ATX</p>
+                        <div class="product-price">12 990 ₽</div>
+                    </div>
+                    <div class="product-card glass-card motherboards" data-id="motherboard5" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"motherboard5","name":"ASUS Prime Z390-A","price":"29990","image":"images/asus-motherboard.jpg","category":"motherboards","description":"Сокет: LGA1151 | Чипсет: Z390"}'>♡</button>
+                        <div class="product-image"><img src="images/asus-motherboard.jpg" alt="ASUS Z390"></div>
+                        <h3>ASUS Prime Z390-A</h3>
+                        <p>LGA1151, Z390, ATX</p>
+                        <div class="product-price">29 990 ₽</div>
+                    </div>
+                    <div class="product-card glass-card motherboards" data-id="motherboard6" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"motherboard6","name":"MSI MPG Z490","price":"25500","image":"images/msi-motherboard.jpg","category":"motherboards","description":"Сокет: LGA1200 | Чипсет: Z490"}'>♡</button>
+                        <div class="product-image"><img src="images/msi-motherboard.jpg" alt="MSI Z490"></div>
+                        <h3>MSI MPG Z490</h3>
+                        <p>LGA1200, Z490, ATX</p>
+                        <div class="product-price">25 500 ₽</div>
+                    </div>
+                    <div class="product-card glass-card motherboards" data-id="motherboard7" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"motherboard7","name":"ASRock X570 Taichi","price":"34000","image":"images/asrock-motherboard.jpg","category":"motherboards","description":"Сокет: AM4 | Чипсет: X570"}'>♡</button>
+                        <div class="product-image"><img src="images/asrock-motherboard.jpg" alt="ASRock X570"></div>
+                        <h3>ASRock X570 Taichi</h3>
+                        <p>AM4, X570, PCIe 4.0</p>
+                        <div class="product-price">34 000 ₽</div>
+                    </div>
+                    <div class="product-card glass-card motherboards" data-id="motherboard8" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"motherboard8","name":"MSI PRO Z790-P","price":"21900","image":"images/msi-pro-z790.jpg","category":"motherboards","description":"Сокет: LGA1700 | Чипсет: Z790"}'>♡</button>
+                        <div class="product-image"><img src="images/msi-pro-z790.jpg" alt="MSI Z790"></div>
+                        <h3>MSI PRO Z790-P</h3>
+                        <p>LGA1700, Z790, DDR5</p>
+                        <div class="product-price">21 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card motherboards" data-id="motherboard9" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"motherboard9","name":"ASUS ROG STRIX B650-A","price":"25900","image":"images/asus-rog-strix.jpg","category":"motherboards","description":"Сокет: AM5 | Чипсет: B650"}'>♡</button>
+                        <div class="product-image"><img src="images/asus-rog-strix.jpg" alt="ASUS B650"></div>
+                        <h3>ASUS ROG STRIX B650-A</h3>
+                        <p>AM5, B650, DDR5</p>
+                        <div class="product-price">25 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card motherboards" data-id="motherboard10" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"motherboard10","name":"Gigabyte Z790 AORUS ELITE","price":"27900","image":"images/gigabyte-z790-aorus.jpg","category":"motherboards","description":"Сокет: LGA1700 | Чипсет: Z790"}'>♡</button>
+                        <div class="product-image"><img src="images/gigabyte-z790-aorus.jpg" alt="Gigabyte Z790"></div>
+                        <h3>Gigabyte Z790 AORUS ELITE</h3>
+                        <p>LGA1700, Z790, DDR5</p>
+                        <div class="product-price">27 900 ₽</div>
+                    </div>
+                    <!-- Видеокарты -->
+                    <div class="product-card glass-card graphics-cards" data-id="gpu4" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"gpu4","name":"AMD Radeon RX 6700 XT","price":"48500","image":"images/amd-radeon-rx-6700xt.jpg","category":"graphics-cards","description":"12 ГБ GDDR6"}'>♡</button>
+                        <div class="product-image"><img src="images/amd-radeon-rx-6700xt.jpg" alt="AMD RX 6700 XT"></div>
+                        <h3>AMD Radeon RX 6700 XT</h3>
+                        <p>12 ГБ GDDR6, до 2581 МГц</p>
+                        <div class="product-price">48 500 ₽</div>
+                    </div>
+                    <div class="product-card glass-card graphics-cards" data-id="gpu5" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"gpu5","name":"NVIDIA GeForce RTX 3070","price":"55800","image":"images/Nvidia-gtx-3070.jpg","category":"graphics-cards","description":"8 ГБ GDDR6"}'>♡</button>
+                        <div class="product-image"><img src="images/Nvidia-gtx-3070.jpg" alt="RTX 3070"></div>
+                        <h3>NVIDIA GeForce RTX 3070</h3>
+                        <p>8 ГБ GDDR6, до 1725 МГц</p>
+                        <div class="product-price">55 800 ₽</div>
+                    </div>
+                    <div class="product-card glass-card graphics-cards" data-id="gpu6" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"gpu6","name":"AMD Radeon RX 6800","price":"51000","image":"images/amd-radeon-rx-6800.jpg","category":"graphics-cards","description":"16 ГБ GDDR6"}'>♡</button>
+                        <div class="product-image"><img src="images/amd-radeon-rx-6800.jpg" alt="RX 6800"></div>
+                        <h3>AMD Radeon RX 6800</h3>
+                        <p>16 ГБ GDDR6, до 2105 МГц</p>
+                        <div class="product-price">51 000 ₽</div>
+                    </div>
+                    <div class="product-card glass-card graphics-cards" data-id="gpu7" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"gpu7","name":"NVIDIA GeForce RTX 3080","price":"79990","image":"images/nvidia-gtx-3080.jpg","category":"graphics-cards","description":"10 ГБ GDDR6X"}'>♡</button>
+                        <div class="product-image"><img src="images/nvidia-gtx-3080.jpg" alt="RTX 3080"></div>
+                        <h3>NVIDIA GeForce RTX 3080</h3>
+                        <p>10 ГБ GDDR6X, до 1710 МГц</p>
+                        <div class="product-price">79 990 ₽</div>
+                    </div>
+                    <div class="product-card glass-card graphics-cards" data-id="gpu8" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"gpu8","name":"NVIDIA RTX 4070 Ti","price":"82900","image":"images/nvidia-gtx-4070.jpg","category":"graphics-cards","description":"12 ГБ GDDR6X"}'>♡</button>
+                        <div class="product-image"><img src="images/nvidia-gtx-4070.jpg" alt="RTX 4070 Ti"></div>
+                        <h3>NVIDIA RTX 4070 Ti</h3>
+                        <p>12 ГБ GDDR6X, DLSS 3</p>
+                        <div class="product-price">82 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card graphics-cards" data-id="gpu9" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"gpu9","name":"AMD Radeon RX 7900 XT","price":"89900","image":"images/amd-radeon-rx-7900.jpg","category":"graphics-cards","description":"20 ГБ GDDR6"}'>♡</button>
+                        <div class="product-image"><img src="images/amd-radeon-rx-7900.jpg" alt="RX 7900 XT"></div>
+                        <h3>AMD Radeon RX 7900 XT</h3>
+                        <p>20 ГБ GDDR6, до 2400 МГц</p>
+                        <div class="product-price">89 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card graphics-cards" data-id="gpu10" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"gpu10","name":"NVIDIA RTX 3060","price":"31900","image":"images/nvidia-gtx-3060.jpg","category":"graphics-cards","description":"12 ГБ GDDR6"}'>♡</button>
+                        <div class="product-image"><img src="images/nvidia-gtx-3060.jpg" alt="RTX 3060"></div>
+                        <h3>NVIDIA RTX 3060</h3>
+                        <p>12 ГБ GDDR6, до 1777 МГц</p>
+                        <div class="product-price">31 900 ₽</div>
+                    </div>
+                    <!-- SSD -->
+                    <div class="product-card glass-card ssds" data-id="ssd4" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"ssd4","name":"SSD Crucial P5 500GB","price":"5900","image":"images/crucial-ssd.jpg","category":"ssds","description":"500 ГБ | до 3400 МБ/с"}'>♡</button>
+                        <div class="product-image"><img src="images/crucial-ssd.jpg" alt="Crucial P5"></div>
+                        <h3>SSD Crucial P5 500GB</h3>
+                        <p>500 ГБ, до 3400 МБ/с, NVMe</p>
+                        <div class="product-price">5 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card ssds" data-id="ssd5" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"ssd5","name":"SSD Samsung EVO 970 500GB","price":"5700","image":"images/samsung-evo-970.jpg","category":"ssds","description":"500 ГБ | до 3500 МБ/с"}'>♡</button>
+                        <div class="product-image"><img src="images/samsung-evo-970.jpg" alt="Samsung EVO"></div>
+                        <h3>SSD Samsung EVO 970 500GB</h3>
+                        <p>500 ГБ, до 3500 МБ/с, NVMe</p>
+                        <div class="product-price">5 700 ₽</div>
+                    </div>
+                    <div class="product-card glass-card ssds" data-id="ssd6" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"ssd6","name":"SSD WD Black SN750 500GB","price":"6200","image":"images/western-digital-ssd.jpg","category":"ssds","description":"500 ГБ | до 3430 МБ/с"}'>♡</button>
+                        <div class="product-image"><img src="images/western-digital-ssd.jpg" alt="WD Black"></div>
+                        <h3>SSD WD Black SN750 500GB</h3>
+                        <p>500 ГБ, до 3430 МБ/с, NVMe</p>
+                        <div class="product-price">6 200 ₽</div>
+                    </div>
+                    <div class="product-card glass-card ssds" data-id="ssd7" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"ssd7","name":"SSD Kingston A2000 500GB","price":"4500","image":"images/kingston-ssd.jpg","category":"ssds","description":"500 ГБ | до 2200 МБ/с"}'>♡</button>
+                        <div class="product-image"><img src="images/kingston-ssd.jpg" alt="Kingston"></div>
+                        <h3>SSD Kingston A2000 500GB</h3>
+                        <p>500 ГБ, до 2200 МБ/с, NVMe</p>
+                        <div class="product-price">4 500 ₽</div>
+                    </div>
+                    <div class="product-card glass-card ssds" data-id="ssd8" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"ssd8","name":"SSD Samsung 980 Pro 1TB","price":"10900","image":"images/samsung-980-pro.jpg","category":"ssds","description":"1 ТБ | до 7000 МБ/с"}'>♡</button>
+                        <div class="product-image"><img src="images/samsung-980-pro.jpg" alt="Samsung 980 Pro"></div>
+                        <h3>SSD Samsung 980 Pro 1TB</h3>
+                        <p>1 ТБ, до 7000 МБ/с, PCIe 4.0</p>
+                        <div class="product-price">10 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card ssds" data-id="ssd9" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"ssd9","name":"SSD WD Black SN770 1TB","price":"8900","image":"images/wd-black-sn770.jpg","category":"ssds","description":"1 ТБ | до 5150 МБ/с"}'>♡</button>
+                        <div class="product-image"><img src="images/wd-black-sn770.jpg" alt="WD SN770"></div>
+                        <h3>SSD WD Black SN770 1TB</h3>
+                        <p>1 ТБ, до 5150 МБ/с, PCIe 4.0</p>
+                        <div class="product-price">8 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card ssds" data-id="ssd10" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"ssd10","name":"SSD Kingston KC3000 1TB","price":"9900","image":"images/kingston-kc3000.jpg","category":"ssds","description":"1 ТБ | до 7000 МБ/с"}'>♡</button>
+                        <div class="product-image"><img src="images/kingston-kc3000.jpg" alt="Kingston KC3000"></div>
+                        <h3>SSD Kingston KC3000 1TB</h3>
+                        <p>1 ТБ, до 7000 МБ/с, PCIe 4.0</p>
+                        <div class="product-price">9 900 ₽</div>
+                    </div>
+                    <!-- Блоки питания -->
+                    <div class="product-card glass-card power-supplies" data-id="psu4" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"psu4","name":"Cooler Master V750 750W","price":"10500","image":"images/cooler-master-power-supply.jpg","category":"power-supplies","description":"750 Вт | 80 Plus Gold"}'>♡</button>
+                        <div class="product-image"><img src="images/cooler-master-power-supply.jpg" alt="Cooler Master"></div>
+                        <h3>Cooler Master V750 750W</h3>
+                        <p>750 Вт, 80 Plus Gold, модульный</p>
+                        <div class="product-price">10 500 ₽</div>
+                    </div>
+                    <div class="product-card glass-card power-supplies" data-id="psu5" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"psu5","name":"Be Quiet Straight Power 11 750W","price":"12990","image":"images/be-quiet-power-supply.jpg","category":"power-supplies","description":"750 Вт | 80 Plus Platinum"}'>♡</button>
+                        <div class="product-image"><img src="images/be-quiet-power-supply.jpg" alt="Be Quiet"></div>
+                        <h3>Be Quiet Straight Power 11 750W</h3>
+                        <p>750 Вт, 80 Plus Platinum</p>
+                        <div class="product-price">12 990 ₽</div>
+                    </div>
+                    <div class="product-card glass-card power-supplies" data-id="psu6" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"psu6","name":"Corsair RM850x 850W","price":"11500","image":"images/corsair-power-supply.jpg","category":"power-supplies","description":"850 Вт | 80 Plus Gold"}'>♡</button>
+                        <div class="product-image"><img src="images/corsair-power-supply.jpg" alt="Corsair"></div>
+                        <h3>Corsair RM850x 850W</h3>
+                        <p>850 Вт, 80 Plus Gold, модульный</p>
+                        <div class="product-price">11 500 ₽</div>
+                    </div>
+                    <div class="product-card glass-card power-supplies" data-id="psu7" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"psu7","name":"Seasonic Focus GX-750 750W","price":"9800","image":"images/seasonic-power-supply.jpg","category":"power-supplies","description":"750 Вт | 80 Plus Gold"}'>♡</button>
+                        <div class="product-image"><img src="images/seasonic-power-supply.jpg" alt="Seasonic"></div>
+                        <h3>Seasonic Focus GX-750 750W</h3>
+                        <p>750 Вт, 80 Plus Gold, модульный</p>
+                        <div class="product-price">9 800 ₽</div>
+                    </div>
+                    <div class="product-card glass-card power-supplies" data-id="psu8" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"psu8","name":"Thermaltake Toughpower GF3 850W","price":"14900","image":"images/thermaltake-psu.jpg","category":"power-supplies","description":"850 Вт | ATX 3.0"}'>♡</button>
+                        <div class="product-image"><img src="images/thermaltake-psu.jpg" alt="Thermaltake"></div>
+                        <h3>Thermaltake Toughpower GF3 850W</h3>
+                        <p>850 Вт, ATX 3.0, PCIe 5.0</p>
+                        <div class="product-price">14 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card power-supplies" data-id="psu9" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"psu9","name":"MSI MPG A850G 850W","price":"13900","image":"images/msi-psu.jpg","category":"power-supplies","description":"850 Вт | ATX 3.0"}'>♡</button>
+                        <div class="product-image"><img src="images/msi-psu.jpg" alt="MSI PSU"></div>
+                        <h3>MSI MPG A850G 850W</h3>
+                        <p>850 Вт, ATX 3.0, PCIe 5.0</p>
+                        <div class="product-price">13 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card power-supplies" data-id="psu10" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"psu10","name":"ASUS ROG Thor 850W","price":"21900","image":"images/asus-psu.jpg","category":"power-supplies","description":"850 Вт | Platinum"}'>♡</button>
+                        <div class="product-image"><img src="images/asus-psu.jpg" alt="ASUS ROG"></div>
+                        <h3>ASUS ROG Thor 850W</h3>
+                        <p>850 Вт, Platinum, OLED</p>
+                        <div class="product-price">21 900 ₽</div>
+                    </div>
+                    <!-- Кулеры -->
+                    <div class="product-card glass-card coolers" data-id="cooler4" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"cooler4","name":"Кулер Arctic Freezer 34","price":"3300","image":"images/arctic-freezer-34.jpg","category":"coolers","description":"120 мм | TDP 150 Вт"}'>♡</button>
+                        <div class="product-image"><img src="images/arctic-freezer-34.jpg" alt="Arctic"></div>
+                        <h3>Кулер Arctic Freezer 34</h3>
+                        <p>120 мм, TDP до 150 Вт</p>
+                        <div class="product-price">3 300 ₽</div>
+                    </div>
+                    <div class="product-card glass-card coolers" data-id="cooler5" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"cooler5","name":"Кулер Noctua NH-D15","price":"8990","image":"images/noctua-nh-d15.jpg","category":"coolers","description":"2x140 мм | TDP 220 Вт"}'>♡</button>
+                        <div class="product-image"><img src="images/noctua-nh-d15.jpg" alt="Noctua"></div>
+                        <h3>Кулер Noctua NH-D15</h3>
+                        <p>2x140 мм, TDP до 220 Вт</p>
+                        <div class="product-price">8 990 ₽</div>
+                    </div>
+                    <div class="product-card glass-card coolers" data-id="cooler6" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"cooler6","name":"Кулер Cooler Master Hyper 212","price":"2500","image":"images/cooler-master-hyper-212.jpg","category":"coolers","description":"120 мм | TDP 150 Вт"}'>♡</button>
+                        <div class="product-image"><img src="images/cooler-master-hyper-212.jpg" alt="Hyper 212"></div>
+                        <h3>Кулер Cooler Master Hyper 212</h3>
+                        <p>120 мм, TDP до 150 Вт</p>
+                        <div class="product-price">2 500 ₽</div>
+                    </div>
+                    <div class="product-card glass-card coolers" data-id="cooler7" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"cooler7","name":"Кулер Be Quiet Dark Rock 4","price":"6800","image":"images/be-quiet-dark-rock-4.jpg","category":"coolers","description":"135 мм | TDP 200 Вт"}'>♡</button>
+                        <div class="product-image"><img src="images/be-quiet-dark-rock-4.jpg" alt="Dark Rock"></div>
+                        <h3>Кулер Be Quiet Dark Rock 4</h3>
+                        <p>135 мм, TDP до 200 Вт, тихий</p>
+                        <div class="product-price">6 800 ₽</div>
+                    </div>
+                    <div class="product-card glass-card coolers" data-id="cooler8" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"cooler8","name":"Кулер DeepCool AK620","price":"5500","image":"images/deepcool-ak620.jpg","category":"coolers","description":"2x120 мм | TDP 260 Вт"}'>♡</button>
+                        <div class="product-image"><img src="images/deepcool-ak620.jpg" alt="DeepCool"></div>
+                        <h3>Кулер DeepCool AK620</h3>
+                        <p>2x120 мм, TDP до 260 Вт</p>
+                        <div class="product-price">5 500 ₽</div>
+                    </div>
+                    <div class="product-card glass-card coolers" data-id="cooler9" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"cooler9","name":"Кулер ID-Cooling SE-224-XTS","price":"2500","image":"images/id-cooling.jpg","category":"coolers","description":"120 мм | TDP 180 Вт"}'>♡</button>
+                        <div class="product-image"><img src="images/id-cooling.jpg" alt="ID-Cooling"></div>
+                        <h3>Кулер ID-Cooling SE-224-XTS</h3>
+                        <p>120 мм, TDP до 180 Вт</p>
+                        <div class="product-price">2 500 ₽</div>
+                    </div>
+                    <div class="product-card glass-card coolers" data-id="cooler10" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"cooler10","name":"Кулер NZXT Kraken X53","price":"11900","image":"images/nzxt-kraken.jpg","category":"coolers","description":"240 мм | Жидкостное"}'>♡</button>
+                        <div class="product-image"><img src="images/nzxt-kraken.jpg" alt="NZXT"></div>
+                        <h3>Кулер NZXT Kraken X53</h3>
+                        <p>240 мм, RGB, жидкостное</p>
+                        <div class="product-price">11 900 ₽</div>
+                    </div>
+                    <!-- Мониторы -->
+                    <div class="product-card glass-card monitors" data-id="monitor4" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"monitor4","name":"Монитор Dell 24\" FullHD","price":"12900","image":"images/monitor-dell-24.jpg","category":"monitors","description":"24\" | IPS | Full HD"}'>♡</button>
+                        <div class="product-image"><img src="images/monitor-dell-24.jpg" alt="Dell"></div>
+                        <h3>Монитор Dell 24" FullHD</h3>
+                        <p>24", IPS, Full HD</p>
+                        <div class="product-price">12 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card monitors" data-id="monitor5" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"monitor5","name":"Монитор Samsung 27\" UHD","price":"28900","image":"images/monitor-samsung-27.jpg","category":"monitors","description":"27\" | 4K | IPS"}'>♡</button>
+                        <div class="product-image"><img src="images/monitor-samsung-27.jpg" alt="Samsung"></div>
+                        <h3>Монитор Samsung 27" UHD</h3>
+                        <p>27", 4K UHD, IPS, HDR10</p>
+                        <div class="product-price">28 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card monitors" data-id="monitor6" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"monitor6","name":"Монитор LG UltraWide 34\"","price":"35900","image":"images/monitor-lg-ultrawide.jpg","category":"monitors","description":"34\" | 3440x1440 | IPS"}'>♡</button>
+                        <div class="product-image"><img src="images/monitor-lg-ultrawide.jpg" alt="LG"></div>
+                        <h3>Монитор LG UltraWide 34"</h3>
+                        <p>34", 3440x1440, IPS</p>
+                        <div class="product-price">35 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card monitors" data-id="monitor7" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"monitor7","name":"Монитор ASUS Gaming 27\" 144Hz","price":"24900","image":"images/monitor-asus-gaming.jpg","category":"monitors","description":"27\" | 144Hz | 1 мс"}'>♡</button>
+                        <div class="product-image"><img src="images/monitor-asus-gaming.jpg" alt="ASUS"></div>
+                        <h3>Монитор ASUS Gaming 27" 144Hz</h3>
+                        <p>27", 144 Гц, 1 мс, FreeSync</p>
+                        <div class="product-price">24 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card monitors" data-id="monitor8" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"monitor8","name":"Монитор AOC 24G2SPU","price":"15900","image":"images/aoc-monitor.jpg","category":"monitors","description":"24\" | 165Hz | IPS"}'>♡</button>
+                        <div class="product-image"><img src="images/aoc-monitor.jpg" alt="AOC"></div>
+                        <h3>Монитор AOC 24G2SPU</h3>
+                        <p>24", 165 Гц, 1 мс, IPS</p>
+                        <div class="product-price">15 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card monitors" data-id="monitor9" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"monitor9","name":"Монитор MSI Optix G273QF","price":"29900","image":"images/msi-monitor.jpg","category":"monitors","description":"27\" | QHD | 165Hz"}'>♡</button>
+                        <div class="product-image"><img src="images/msi-monitor.jpg" alt="MSI"></div>
+                        <h3>Монитор MSI Optix G273QF</h3>
+                        <p>27", QHD, 165 Гц, 1 мс</p>
+                        <div class="product-price">29 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card monitors" data-id="monitor10" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"monitor10","name":"Монитор BenQ EX3210U","price":"69900","image":"images/benq-monitor.jpg","category":"monitors","description":"32\" | 4K | 144Hz"}'>♡</button>
+                        <div class="product-image"><img src="images/benq-monitor.jpg" alt="BenQ"></div>
+                        <h3>Монитор BenQ EX3210U</h3>
+                        <p>32", 4K, 144 Гц, HDR600</p>
+                        <div class="product-price">69 900 ₽</div>
+                    </div>
+                    <!-- Клавиатуры -->
+                    <div class="product-card glass-card keyboards" data-id="keyboard4" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"keyboard4","name":"Клавиатура Redragon K552","price":"4500","image":"images/keyboard-redragon.jpg","category":"keyboards","description":"TKL | Outemu Blue"}'>♡</button>
+                        <div class="product-image"><img src="images/keyboard-redragon.jpg" alt="Redragon"></div>
+                        <h3>Клавиатура Redragon K552</h3>
+                        <p>TKL, Outemu Blue, LED</p>
+                        <div class="product-price">4 500 ₽</div>
+                    </div>
+                    <div class="product-card glass-card keyboards" data-id="keyboard5" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"keyboard5","name":"Клавиатура Logitech G915","price":"18900","image":"images/keyboard-logitech-g915.jpg","category":"keyboards","description":"Беспроводная | RGB"}'>♡</button>
+                        <div class="product-image"><img src="images/keyboard-logitech-g915.jpg" alt="Logitech"></div>
+                        <h3>Клавиатура Logitech G915</h3>
+                        <p>Беспроводная, RGB, алюминий</p>
+                        <div class="product-price">18 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card keyboards" data-id="keyboard6" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"keyboard6","name":"Клавиатура Razer BlackWidow","price":"14900","image":"images/keyboard-razer-blackwidow.jpg","category":"keyboards","description":"Механическая | Chroma RGB"}'>♡</button>
+                        <div class="product-image"><img src="images/keyboard-razer-blackwidow.jpg" alt="Razer"></div>
+                        <h3>Клавиатура Razer BlackWidow</h3>
+                        <p>Механическая, Chroma RGB</p>
+                        <div class="product-price">14 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card keyboards" data-id="keyboard7" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"keyboard7","name":"Клавиатура Keychron K2","price":"8900","image":"images/keyboard-keychron-k2.jpg","category":"keyboards","description":"75% | Bluetooth"}'>♡</button>
+                        <div class="product-image"><img src="images/keyboard-keychron-k2.jpg" alt="Keychron"></div>
+                        <h3>Клавиатура Keychron K2</h3>
+                        <p>75%, Bluetooth, Mac/Windows</p>
+                        <div class="product-price">8 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card keyboards" data-id="keyboard8" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"keyboard8","name":"Клавиатура HyperX Alloy Origins","price":"9900","image":"images/hyperx-keyboard.jpg","category":"keyboards","description":"TKL | HyperX Red"}'>♡</button>
+                        <div class="product-image"><img src="images/hyperx-keyboard.jpg" alt="HyperX"></div>
+                        <h3>Клавиатура HyperX Alloy Origins</h3>
+                        <p>TKL, HyperX Red, RGB</p>
+                        <div class="product-price">9 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card keyboards" data-id="keyboard9" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"keyboard9","name":"Клавиатура Corsair K70 RGB","price":"15900","image":"images/corsair-keyboard.jpg","category":"keyboards","description":"Cherry MX Red | RGB"}'>♡</button>
+                        <div class="product-image"><img src="images/corsair-keyboard.jpg" alt="Corsair"></div>
+                        <h3>Клавиатура Corsair K70 RGB</h3>
+                        <p>Cherry MX Red, RGB, алюминий</p>
+                        <div class="product-price">15 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card keyboards" data-id="keyboard10" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"keyboard10","name":"Клавиатура SteelSeries Apex Pro","price":"19900","image":"images/steelseries-keyboard.jpg","category":"keyboards","description":"OmniPoint | OLED"}'>♡</button>
+                        <div class="product-image"><img src="images/steelseries-keyboard.jpg" alt="SteelSeries"></div>
+                        <h3>Клавиатура SteelSeries Apex Pro</h3>
+                        <p>OmniPoint, RGB, OLED</p>
+                        <div class="product-price">19 900 ₽</div>
+                    </div>
+                    <!-- Мышки -->
+                    <div class="product-card glass-card mice" data-id="mouse4" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"mouse4","name":"Мышь Logitech MX Master 3","price":"12900","image":"images/mouse-logitech-mx-master.jpg","category":"mice","description":"Darkfield | MagSpeed"}'>♡</button>
+                        <div class="product-image"><img src="images/mouse-logitech-mx-master.jpg" alt="MX Master"></div>
+                        <h3>Мышь Logitech MX Master 3</h3>
+                        <p>Darkfield, MagSpeed, Bluetooth</p>
+                        <div class="product-price">12 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card mice" data-id="mouse5" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"mouse5","name":"Мышь Logitech G Pro","price":"8900","image":"images/mouse-logitech-g-pro.jpg","category":"mice","description":"HERO 25K | 25600 DPI"}'>♡</button>
+                        <div class="product-image"><img src="images/mouse-logitech-g-pro.jpg" alt="G Pro"></div>
+                        <h3>Мышь Logitech G Pro</h3>
+                        <p>HERO 25K, 25600 DPI, 80 г</p>
+                        <div class="product-price">8 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card mice" data-id="mouse6" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"mouse6","name":"Мышь Razer DeathAdder V2","price":"7900","image":"images/mouse-razer-deathadder.jpg","category":"mice","description":"20K DPI | 82 г"}'>♡</button>
+                        <div class="product-image"><img src="images/mouse-razer-deathadder.jpg" alt="DeathAdder"></div>
+                        <h3>Мышь Razer DeathAdder V2</h3>
+                        <p>20K DPI, Chroma RGB, 82 г</p>
+                        <div class="product-price">7 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card mice" data-id="mouse7" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"mouse7","name":"Мышь SteelSeries Aerox 3","price":"10900","image":"images/mouse-steelseries-aero.jpg","category":"mice","description":"Беспроводная | 66 г"}'>♡</button>
+                        <div class="product-image"><img src="images/mouse-steelseries-aero.jpg" alt="Aerox"></div>
+                        <h3>Мышь SteelSeries Aerox 3</h3>
+                        <p>Беспроводная, 66 г, 200 ч</p>
+                        <div class="product-price">10 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card mice" data-id="mouse8" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"mouse8","name":"Мышь Logitech G502 X","price":"8900","image":"images/logitech-mouse.jpg","category":"mice","description":"HERO 25K | 11 кнопок"}'>♡</button>
+                        <div class="product-image"><img src="images/logitech-mouse.jpg" alt="G502"></div>
+                        <h3>Мышь Logitech G502 X</h3>
+                        <p>HERO 25K, 11 кнопок, RGB</p>
+                        <div class="product-price">8 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card mice" data-id="mouse9" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"mouse9","name":"Мышь Razer Viper V2 Pro","price":"14900","image":"images/razer-viper.jpg","category":"mice","description":"30K DPI | 59 г"}'>♡</button>
+                        <div class="product-image"><img src="images/razer-viper.jpg" alt="Viper"></div>
+                        <h3>Мышь Razer Viper V2 Pro</h3>
+                        <p>30K DPI, 59 г, беспроводная</p>
+                        <div class="product-price">14 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card mice" data-id="mouse10" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"mouse10","name":"Мышь Zowie EC2-C","price":"6900","image":"images/zowie-mouse.jpg","category":"mice","description":"3360 | 73 г"}'>♡</button>
+                        <div class="product-image"><img src="images/zowie-mouse.jpg" alt="Zowie"></div>
+                        <h3>Мышь Zowie EC2-C</h3>
+                        <p>3360, 73 г, без подсветки</p>
+                        <div class="product-price">6 900 ₽</div>
+                    </div>
+                    <!-- Наушники -->
+                    <div class="product-card glass-card headphones" data-id="headphone4" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"headphone4","name":"Наушники JBL Quantum 400","price":"6900","image":"images/headphones-jbl-quantum.jpg","category":"headphones","description":"50 мм | RGB"}'>♡</button>
+                        <div class="product-image"><img src="images/headphones-jbl-quantum.jpg" alt="JBL"></div>
+                        <h3>Наушники JBL Quantum 400</h3>
+                        <p>50 мм, RGB, USB</p>
+                        <div class="product-price">6 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card headphones" data-id="headphone5" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"headphone5","name":"Наушники Sony WH-1000XM4","price":"29900","image":"images/headphones-sony-wh1000xm4.jpg","category":"headphones","description":"ANC | 30 ч"}'>♡</button>
+                        <div class="product-image"><img src="images/headphones-sony-wh1000xm4.jpg" alt="Sony"></div>
+                        <h3>Наушники Sony WH-1000XM4</h3>
+                        <p>ANC, 30 ч, Bluetooth</p>
+                        <div class="product-price">29 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card headphones" data-id="headphone6" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"headphone6","name":"Наушники HyperX Cloud II","price":"8900","image":"images/headphones-hyperx-cloud.jpg","category":"headphones","description":"7.1 | 53 мм"}'>♡</button>
+                        <div class="product-image"><img src="images/headphones-hyperx-cloud.jpg" alt="HyperX"></div>
+                        <h3>Наушники HyperX Cloud II</h3>
+                        <p>7.1 Surround, 53 мм, USB</p>
+                        <div class="product-price">8 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card headphones" data-id="headphone7" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"headphone7","name":"Наушники Razer BlackShark V2","price":"12900","image":"images/headphones-razer-blackshark.jpg","category":"headphones","description":"THX Spatial | 50 мм"}'>♡</button>
+                        <div class="product-image"><img src="images/headphones-razer-blackshark.jpg" alt="Razer"></div>
+                        <h3>Наушники Razer BlackShark V2</h3>
+                        <p>THX Spatial, 50 мм, USB</p>
+                        <div class="product-price">12 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card headphones" data-id="headphone8" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"headphone8","name":"Наушники Logitech G733","price":"11900","image":"images/logitech-headphones.jpg","category":"headphones","description":"Беспроводные | RGB"}'>♡</button>
+                        <div class="product-image"><img src="images/logitech-headphones.jpg" alt="Logitech"></div>
+                        <h3>Наушники Logitech G733</h3>
+                        <p>Беспроводные, RGB, DTS</p>
+                        <div class="product-price">11 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card headphones" data-id="headphone9" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"headphone9","name":"Наушники SteelSeries Arctis 7","price":"14900","image":"images/steelseries-headphones.jpg","category":"headphones","description":"Беспроводные | DTS"}'>♡</button>
+                        <div class="product-image"><img src="images/steelseries-headphones.jpg" alt="SteelSeries"></div>
+                        <h3>Наушники SteelSeries Arctis 7</h3>
+                        <p>Беспроводные, DTS, 24 ч</p>
+                        <div class="product-price">14 900 ₽</div>
+                    </div>
+                    <div class="product-card glass-card headphones" data-id="headphone10" onclick="showProductDetails(this)">
+                        <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavorite(this)" data-product='{"id":"headphone10","name":"Наушники Bose QuietComfort 45","price":"27900","image":"images/bose-headphones.jpg","category":"headphones","description":"ANC | 22 ч"}'>♡</button>
+                        <div class="product-image"><img src="images/bose-headphones.jpg" alt="Bose"></div>
+                        <h3>Наушники Bose QuietComfort 45</h3>
+                        <p>ANC, 22 ч, Bluetooth</p>
+                        <div class="product-price">27 900 ₽</div>
+                    </div>
+                </div>
+                <button class="scroll-btn scroll-right" onclick="scrollProducts('all', 1)">❯</button>
+            </div>
+        </section>
+
+        <!-- ИЗБРАННОЕ -->
+        <section id="favorites-section" class="products-section" style="display: none;">
+            <div class="section-header">
+                <h2 class="section-title">Избранное</h2>
+            </div>
+            <div class="products-scroll-container">
+                <button class="scroll-btn scroll-left" onclick="scrollProducts('favorites', -1)">❮</button>
+                <div class="product-list" id="favoritesProductList"></div>
+                <button class="scroll-btn scroll-right" onclick="scrollProducts('favorites', 1)">❯</button>
+            </div>
+        </section>
+
+        <!-- ПРЕИМУЩЕСТВА -->
+        <section id="advantages-section" style="display: none;">
+            <h2 class="section-title">Наши преимущества</h2>
+            <div class="advantages-grid">
+                <div class="advantage-card glass-card"><div class="advantage-icon"></div><h3>Гарантия 2-3 года</h3><p>На все товары расширенная гарантия. Быстрый бесплатный ремонт в сервисном центре.</p><span class="advantage-tag">Надежность</span></div>
+                <div class="advantage-card glass-card"><div class="advantage-icon"></div><h3>Быстрая доставка</h3><p>Бесплатная доставка от 10 000₽. В регионы — от 1 дня. Тщательная упаковка.</p><span class="advantage-tag">Удобство</span></div>
+                <div class="advantage-card glass-card"><div class="advantage-icon"></div><h3>Экспертный подбор</h3><p>Поможем собрать ПК под любые задачи. Проверим совместимость компонентов.</p><span class="advantage-tag">Профессионализм</span></div>
+                <div class="advantage-card glass-card"><div class="advantage-icon"></div><h3>Лучшие цены</h3><p>Конкурентные цены и акции. Скидки для постоянных клиентов. Рассрочка 0%.</p><span class="advantage-tag">Выгода</span></div>
+                <div class="advantage-card glass-card"><div class="advantage-icon"></div><h3>Профессиональная сборка</h3><p>Аккуратная сборка с кабельным менеджментом. Тестирование системы под нагрузкой.</p><span class="advantage-tag">Качество</span></div>
+                <div class="advantage-card glass-card"><div class="advantage-icon"></div><h3>Поддержка 24/7</h3><p>Круглосуточная техподдержка. Помощь в диагностике. Быстрое реагирование.</p><span class="advantage-tag">Забота</span></div>
+                <div class="advantage-card glass-card"><div class="advantage-icon"></div><h3>Широкий ассортимент</h3><p>Более 5000 товаров. Постоянное обновление. Наличие редких моделей.</p><span class="advantage-tag">Выбор</span></div>
+                <div class="advantage-card glass-card"><div class="advantage-icon"></div><h3>Легкий возврат</h3><p>Возврат в течение 14 дней. Прозрачные условия. Компенсация при браке.</p><span class="advantage-tag">Безопасность</span></div>
+            </div>
+            <div style="text-align: center; margin-top: 30px;"><button class="back-to-catalog glass-btn" onclick="showCatalog()">Вернуться в каталог</button></div>
+        </section>
+    </main>
+
+    <!-- СТРАНИЦА ТОВАРА -->
+    <div class="product-page" id="product-page" onclick="handleProductPageClick(event)" style="display: none;">
+        <span class="product-page-close" onclick="showCatalog()">×</span>
+        <div class="product-detail-container glass-card" id="productDetailContainer"></div>
+    </div>
+
+    <!-- СТРАНИЦА "О НАС" -->
+    <div class="about-page" id="about-page" style="display: none;">
+        <div class="about-header glass-card">
+            <h1>О нашем магазине</h1>
+            <p class="subtitle">Мы — ведущий поставщик компьютерных комплектующих с более чем 10-летним опытом работы на рынке. Наша миссия — сделать передовые технологии доступными для каждого.</p>
+        </div>
+        <section class="hero-section">
+            <div class="hero-content glass-card">
+                <h2>Наша история</h2>
+                <p>Основанный в 2013 году, наш магазин начал свой путь как небольшой магазин комплектующих для ПК. Сегодня мы превратились в одного из лидеров рынка, обслуживая тысячи клиентов по всей России.</p>
+                <p>Мы верим, что качественные компьютерные компоненты должны быть доступны каждому. Поэтому мы тщательно отбираем каждого поставщика и каждый продукт, который появляется в нашем каталоге.</p>
+                <p>Наша команда состоит из энтузиастов и профессионалов, которые живут технологиями и готовы помочь каждому клиенту найти идеальное решение для любых задач.</p>
+            </div>
+            <div class="hero-image glass-card"><img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Наш магазин"></div>
+        </section>
+        <section class="features-grid">
+            <div class="feature-card glass-card"><div class="feature-icon"></div><h3>Качество гарантировано</h3><p>Все товары проходят тщательную проверку перед отправкой. Мы работаем только с проверенными производителями.</p></div>
+            <div class="feature-card glass-card"><div class="feature-icon"></div><h3>Быстрая доставка</h3><p>Доставляем заказы по всей России от 1 дня. Собственная служба доставки в крупных городах.</p></div>
+            <div class="feature-card glass-card"><div class="feature-icon"></div><h3>Гарантия 2 года</h3><p>На все товары предоставляем расширенную гарантию. Быстрый и бесплатный сервис по гарантийным случаям.</p></div>
+            <div class="feature-card glass-card"><div class="feature-icon"></div><h3>Экспертная поддержка</h3><p>Наши специалисты помогут с подбором компонентов, сборкой и настройкой систем любой сложности.</p></div>
+        </section>
+        <section class="history-section glass-card">
+            <h2>Наш путь</h2>
+            <div class="timeline">
+                <div class="timeline-item"><div class="timeline-year">2013</div><div class="timeline-text">Основание компании. Открытие первого магазина в Москве.</div></div>
+                <div class="timeline-item"><div class="timeline-year">2015</div><div class="timeline-text">Запуск интернет-магазина. Расширение ассортимента до 1000 товаров.</div></div>
+                <div class="timeline-item"><div class="timeline-year">2018</div><div class="timeline-text">Открытие собственного сервисного центра. Начало работы с корпоративными клиентами.</div></div>
+                <div class="timeline-item"><div class="timeline-year">2020</div><div class="timeline-text">Запуск службы сборки ПК. Достижение отметки в 10 000 довольных клиентов.</div></div>
+                <div class="timeline-item"><div class="timeline-year">2023</div><div class="timeline-text">Расширение складов. Выход на федеральный уровень с доставкой по всей России.</div></div>
+            </div>
+        </section>
+        <section class="team-section">
+            <h2 class="section-title">Наша команда</h2>
+            <div class="team-grid">
+                <div class="team-member glass-card"><div class="member-photo">МР</div><div class="member-name">Миша Резаев</div><div class="member-role">Основатель и CEO</div><div class="member-bio">15 лет в IT-индустрии. Страстный энтузиаст компьютерных технологий.</div></div>
+                <div class="team-member glass-card"><div class="member-photo">МП</div><div class="member-name">Мария Петрова</div><div class="member-role">Технический директор</div><div class="member-bio">Эксперт по сборке ПК. Помогла собрать более 5000 систем.</div></div>
+                <div class="team-member glass-card"><div class="member-photo">ЗЛ</div><div class="member-name">Захар Латфуллин</div><div class="member-role">Менеджер по закупкам</div><div class="member-bio">Обеспечивает лучшие цены и качество от ведущих производителей.</div></div>
+                <div class="team-member glass-card"><div class="member-photo">ЕВ</div><div class="member-name">Елена Волкова</div><div class="member-role">Руководитель клиентской поддержки</div><div class="member-bio">Всегда на связи, чтобы помочь с любыми вопросами и проблемами.</div></div>
+            </div>
+        </section>
+        <section class="contacts-section glass-card">
+            <h2>Свяжитесь с нами</h2>
+            <div class="contact-info-grid">
+                <div class="contact-item">
+                    <div class="contact-text">
+                        <h3>Телефон</h3>
+                        <p>+7 (950) 593-25-66</p>
+                        <p>Ежедневно с 9:00 до 21:00</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-text">
+                        <h3>Email</h3>
+                        <p><a href="mailto:zaharlatfullin8@gmail.com" class="contact-link">zaharlatfullin8@gmail.com</a></p>
+                        <p>Для общих вопросов</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-text">
+                        <h3>Telegram</h3>
+                        <p><a href="https://t.me/pcparts_support" target="_blank" class="contact-link">@pcparts_support</a></p>
+                        <p>Быстрый ответ 24/7</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-text">
+                        <h3>Офис</h3>
+                        <p>Кемерово, ул. Павленко, 1А</p>
+                        <p>Пн-Пт с 10:00 до 19:00</p>
+                    </div>
+                </div>
+            </div>
+            <button class="back-to-catalog glass-btn" onclick="showCatalog()">Вернуться в каталог</button>
+        </section>
+    </div>
+
+    <!-- СТРАНИЦА ПОДДЕРЖКИ -->
+    <div class="support-page" id="support-page" style="display: none;">
+        <div class="support-page-header glass-card">
+            <h1>Техническая поддержка</h1>
+            <p class="subtitle">Мы всегда готовы помочь вам с любыми вопросами. Наши специалисты ответят в ближайшее время.</p>
+        </div>
+        <div class="support-page-grid">
+            <div class="support-faq glass-card">
+                <h2>Часто задаваемые вопросы</h2>
+                <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span>Как выбрать совместимые комплектующие?</span><span class="faq-icon">▼</span></div><div class="faq-answer"><p>Вы можете воспользоваться нашим онлайн-конфигуратором или обратиться к нашим специалистам. Также мы рекомендуем проверять совместимость по сокету процессора и материнской платы, а также по форм-фактору корпуса и блока питания.</p></div></div>
+                <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span>Сколько времени занимает доставка?</span><span class="faq-icon">▼</span></div><div class="faq-answer"><p>Доставка по Москве и области занимает 1-2 дня. В регионы доставка осуществляется от 3 до 7 дней в зависимости от удаленности. Бесплатная доставка при заказе от 10 000 ₽.</p></div></div>
+                <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span>Можно ли вернуть товар?</span><span class="faq-icon">▼</span></div><div class="faq-answer"><p>Да, вы можете вернуть товар в течение 14 дней с момента получения при условии сохранения товарного вида и упаковки. Для товаров надлежащего качества возврат возможен, если товар не был в употреблении.</p></div></div>
+                <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span>Предоставляете ли вы услуги по сборке ПК?</span><span class="faq-icon">▼</span></div><div class="faq-answer"><p>Да, мы предлагаем профессиональную сборку ПК с кабельным менеджментом и тестированием под нагрузкой. Стоимость сборки от 2 500 ₽. Также мы поможем с установкой операционной системы и необходимого ПО.</p></div></div>
+                <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span>Какие способы оплаты доступны?</span><span class="faq-icon">▼</span></div><div class="faq-answer"><p>Мы принимаем оплату банковскими картами, наличными при самовывозе, а также предлагаем рассрочку от банков-партнеров на 3, 6 или 12 месяцев без процентов.</p></div></div>
+                <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span>Как связаться с поддержкой?</span><span class="faq-icon">▼</span></div><div class="faq-answer"><p>Вы можете связаться с нами по телефону +7 (950) 593-25-66, написать на email <a href="mailto:zaharlatfullin8@gmail.com" class="contact-link">zaharlatfullin8@gmail.com</a> или воспользоваться онлайн-чатом в правом нижнем углу экрана. Мы работаем круглосуточно!</p></div></div>
+            </div>
+            <div class="support-contact glass-card">
+                <h2>Контакты поддержки</h2>
+                <div class="support-contact-item">
+                    <div class="contact-details">
+                        <h3>Телефон горячей линии</h3>
+                        <p>+7 (950) 593-25-66</p>
+                        <small>Круглосуточно, без выходных</small>
+                    </div>
+                </div>
+                <div class="support-contact-item">
+                    <div class="contact-details">
+                        <h3>Email для обращений</h3>
+                        <p><a href="mailto:support@pcparts.ru" class="contact-link">support@pcparts.ru</a></p>
+                        <small>Ответ в течение 2 часов</small>
+                    </div>
+                </div>
+                <div class="support-contact-item">
+                    <div class="contact-details">
+                        <h3>Telegram</h3>
+                        <p><a href="https://t.me/pcparts_support" target="_blank" class="contact-link">@pcparts_support</a></p>
+                        <small>Быстрый ответ 24/7</small>
+                    </div>
+                </div>
+                <div class="support-contact-item">
+                    <div class="contact-details">
+                        <h3>Онлайн-чат</h3>
+                        <p>Нажмите на кнопку в правом нижнем углу</p>
+                        <small>Ответ в течение 5 минут</small>
+                    </div>
+                </div>
+                <button class="open-chat-btn" onclick="toggleSupportChat()">Открыть чат с поддержкой</button>
+            </div>
+            <div class="support-form glass-card">
+                <h2>Отправить обращение</h2>
+                <form id="supportForm">
+                    <div class="input-group"><input type="text" id="supportName" placeholder=" " required><label for="supportName">Ваше имя</label></div>
+                    <div class="input-group"><input type="email" id="supportEmail" placeholder=" " required><label for="supportEmail">Email для ответа</label></div>
+                    <div class="input-group"><input type="text" id="supportSubject" placeholder=" " required><label for="supportSubject">Тема обращения</label></div>
+                    <div class="input-group"><textarea id="supportMessage" rows="5" placeholder=" " required></textarea><label for="supportMessage">Сообщение</label></div>
+                    <button type="submit" class="submit-btn">Отправить обращение</button>
+                </form>
+            </div>
+        </div>
+        <button class="back-to-catalog glass-btn" onclick="showCatalog()" style="margin: 20px auto; display: block;">Вернуться в каталог</button>
+    </div>
+
+    <!-- СТРАНИЦА ЛИЧНОГО КАБИНЕТА -->
+    <div class="profile-page" id="profile-page" style="display: none;">
+        <div class="profile-header glass-card">
+            <div class="profile-avatar" id="profileAvatarContainer">
+                <img id="profileAvatarImg" class="avatar-img" src="images/default-avatar.png" alt="Аватар">
+                <label for="avatarUpload" class="change-avatar-btn" title="Сменить фото">📷</label>
+                <input type="file" id="avatarUpload" accept="image/jpeg,image/png,image/gif" style="display: none;">
+            </div>
+            <h1 id="profileUsername">Пользователь</h1>
+            <p class="profile-email" id="profileEmail">email@example.com</p>
+            <div class="profile-stats">
+                <div class="stat-item"><span class="stat-value" id="profileOrdersCount">0</span><span class="stat-label">Заказов</span></div>
+                <div class="stat-item"><span class="stat-value" id="profileFavoritesCount">0</span><span class="stat-label">В избранном</span></div>
+            </div>
+            <p class="profile-regdate" id="profileRegDate">Дата регистрации: --</p>
+        </div>
+        <div class="profile-tabs">
+            <button class="profile-tab active" onclick="showProfileTab('info')">Личные данные</button>
+            <button class="profile-tab" onclick="showProfileTab('orders')">История заказов</button>
+            <button class="profile-tab" onclick="showProfileTab('favorites')">Избранное</button>
+            <button class="profile-tab" onclick="showProfileTab('settings')">Настройки</button>
+        </div>
+        <div id="profile-info-tab" class="profile-tab-content active">
+            <div class="profile-card glass-card">
+                <h1>Личная информация</h1>
+                <form id="profileEditForm">
+                    <div class="input-group"><input type="text" id="profileEditName" placeholder=" " required><label for="profileEditName">Имя</label></div>
+                    <div class="input-group"><input type="email" id="profileEditEmail" placeholder=" " required><label for="profileEditEmail">Email</label></div>
+                    <div class="input-group"><input type="tel" id="profileEditPhone" placeholder=" "><label for="profileEditPhone">Телефон</label></div>
+                    <div class="input-group"><input type="text" id="profileEditCity" placeholder=" "><label for="profileEditCity">Город</label></div>
+                    <div class="input-group"><input type="text" id="profileEditAddress" placeholder=" "><label for="profileEditAddress">Адрес доставки</label></div>
+                    <div class="input-group"><input type="password" id="profileEditPassword" placeholder=" "><label for="profileEditPassword">Новый пароль (оставьте пустым, чтобы не менять)</label></div>
+                    <div class="profile-actions"><button type="submit" class="submit-btn">Сохранить изменения</button><button type="button" class="logout-btn" onclick="logout()">Выйти из аккаунта</button></div>
+                </form>
+            </div>
+        </div>
+        <div id="profile-orders-tab" class="profile-tab-content">
+            <div class="profile-card glass-card">
+                <h1>История заказов</h1>
+                <div id="ordersList" class="orders-list">
+                    <div class="empty-orders"><span class="empty-icon"></span><p>У вас пока нет заказов</p><button class="glass-btn" onclick="showCatalog()">Перейти в каталог</button></div>
+                </div>
+            </div>
+        </div>
+        <div id="profile-favorites-tab" class="profile-tab-content">
+            <div class="profile-card glass-card">
+                <h1>Избранные товары</h1>
+                <div id="profileFavoritesList" class="profile-favorites-grid">
+                    <div class="empty-favorites"><span class="empty-icon"></span><p>У вас пока нет избранных товаров</p><button class="glass-btn" onclick="showCatalog()">Перейти в каталог</button></div>
+                </div>
+            </div>
+        </div>
+        <div id="profile-settings-tab" class="profile-tab-content">
+            <div class="profile-card glass-card">
+                <h1>Настройки аккаунта</h1>
+                <div class="settings-item"><span>Email-уведомления о заказах</span><label class="switch"><input type="checkbox" id="settingsNotifications" checked><span class="slider"></span></label></div>
+                <div class="settings-item"><span>Тёмная тема</span><label class="switch"><input type="checkbox" id="settingsDarkTheme"><span class="slider"></span></label></div>
+                <div class="settings-item"><span>Светлая тема</span><label class="switch"><input type="checkbox" id="settingsLightTheme"><span class="slider"></span></label></div>
+                <button class="danger-btn" id="deleteAccountBtn" onclick="confirmDeleteAccount()">Удалить аккаунт</button>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 30px;"><button class="back-to-catalog glass-btn" onclick="showCatalog()">← Вернуться в каталог</button></div>
+    </div>
+
+    <!-- МОДАЛЬНЫЕ ОКНА -->
+    <div id="cropModal" class="modal">
+        <div class="modal-content glass-effect" style="max-width: 600px;">
+            <span class="close" onclick="closeCropModal()">×</span>
+            <div class="modal-header"><h2>✂️ Обрезка аватара</h2><p>Выберите область для аватара</p></div>
+            <div class="crop-container"><img id="cropImage" src="#" alt="Изображение для обрезки" style="max-width: 100%;"></div>
+            <div class="crop-actions"><button class="submit-btn" onclick="applyCrop()">✅ Применить</button><button class="glass-btn" onclick="closeCropModal()">❌ Отмена</button></div>
+        </div>
+    </div>
+
+    <div id="cartModal" class="modal">
+        <div class="modal-content glass-effect" style="max-width: 600px;">
+            <span class="close" onclick="closeCart()">×</span>
+            <div class="modal-header"><h2>🛒 Корзина</h2></div>
+            <div id="emptyCart" style="text-align: center; padding: 40px 20px; display: none;"><div style="font-size: 4rem;">🛒</div><h3>Корзина пуста</h3><p>Добавьте товары из каталога</p><button class="submit-btn" onclick="closeCart(); showCatalog();">Перейти в каталог</button></div>
+            <div id="cartContent" style="display: none;"><div id="cartItems" class="cart-items"></div><div class="cart-footer"><div class="cart-total"><span>Итого:</span><span id="cartTotal">0 ₽</span></div><button class="submit-btn" onclick="checkout()">Оформить заказ</button></div></div>
+        </div>
+    </div>
+
+    <div id="checkoutModal" class="modal">
+        <div class="modal-content glass-effect" style="max-width: 500px;">
+            <span class="close" onclick="closeCheckout()">×</span>
+            <div class="modal-header"><h2>📦 Оформление заказа</h2></div>
+            <form id="checkoutForm">
+                <div class="input-group"><input type="text" id="checkoutName" placeholder=" " required><label for="checkoutName">ФИО получателя</label></div>
+                <div class="input-group"><input type="tel" id="checkoutPhone" placeholder=" " required><label for="checkoutPhone">Телефон</label></div>
+                <div class="input-group"><input type="text" id="checkoutAddress" placeholder=" " required><label for="checkoutAddress">Адрес доставки</label></div>
+                <div style="margin: 20px 0;"><label>Способ оплаты:</label>
+                    <div class="payment-methods">
+                        <label class="payment-option"><input type="radio" name="paymentMethod" value="card" checked><span class="payment-label">💳 Банковская карта</span></label>
+                        <label class="payment-option"><input type="radio" name="paymentMethod" value="sbp"><span class="payment-label">📱 СБП</span></label>
+                        <label class="payment-option"><input type="radio" name="paymentMethod" value="cash"><span class="payment-label">💰 Наличными курьеру</span></label>
+                    </div>
+                </div>
+                <div id="cardPaymentBlock">
+                    <div class="input-group"><input type="text" id="cardNumber" placeholder=" " maxlength="19"><label for="cardNumber">Номер карты</label></div>
+                    <div style="display: flex; gap: 15px;">
+                        <div class="input-group" style="flex:1;"><input type="text" id="cardExpiry" placeholder=" " maxlength="5"><label for="cardExpiry">ММ/ГГ</label></div>
+                        <div class="input-group" style="flex:1;"><input type="text" id="cardCvv" placeholder=" " maxlength="3"><label for="cardCvv">CVV</label></div>
+                    </div>
+                </div>
+                <div id="sbpPaymentBlock" style="display: none;">
+                    <div class="input-group"><input type="text" id="sbpPhone" placeholder=" "><label for="sbpPhone">Номер телефона для СБП</label></div>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: -10px;">На этот номер придёт push-уведомление из банка</p>
+                </div>
+                <button type="submit" class="submit-btn">Продолжить</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="codeModal" class="modal">
+        <div class="modal-content glass-effect" style="max-width: 400px;">
+            <span class="close" onclick="closeCodeModal()">×</span>
+            <div class="modal-header"><h2>🔐 Подтверждение</h2></div>
+            <p style="text-align: center; margin-bottom: 20px;" id="codeMessage">Введите код из SMS</p>
+            <div class="code-inputs"><input type="text" maxlength="1" class="code-input" oninput="moveToNext(this,1)"><input type="text" maxlength="1" class="code-input" oninput="moveToNext(this,2)"><input type="text" maxlength="1" class="code-input" oninput="moveToNext(this,3)"><input type="text" maxlength="1" class="code-input" oninput="moveToNext(this,4)"></div>
+            <p style="text-align: center; color: var(--text-secondary);">Тестовый код: <strong>1234</strong></p>
+            <button class="submit-btn" onclick="confirmCode()">Подтвердить</button>
+            <button class="glass-btn" onclick="closeCodeModal()">Отмена</button>
+        </div>
+    </div>
+
+    <div id="successModal" class="modal">
+        <div class="modal-content glass-effect" style="max-width: 400px; text-align: center;">
+            <span class="close" onclick="closeSuccessModal()">×</span>
+            <div style="font-size: 4rem;">✅</div>
+            <h2>Заказ оформлен!</h2>
+            <p>Номер вашего заказа: <strong id="successOrderNumber"></strong></p>
+            <p style="color: var(--text-secondary);">Мы свяжемся с вами для подтверждения</p>
+            <button class="submit-btn" onclick="closeSuccessModal(); showCatalog();">В каталог</button>
+        </div>
+    </div>
+
+    <!-- ПОДВАЛ -->
+    <footer class="glass-footer">
+        <div class="footer-content">
+            <div class="footer-logo">PC<span class="accent">Parts</span></div>
+            <p>© 2026 Магазин компьютерных комплектующих. Все права защищены.</p>
+            <div class="footer-links">
+                <a href="https://t.me/pcparts_support" target="_blank" class="footer-link">
+                    <span style="display: inline-flex; align-items: center; gap: 6px;">
+                        <img src="images/telegram-icon.png" alt="Telegram" style="width: 18px; height: 18px; vertical-align: middle;"> Telegram
+                    </span>
+                </a>
+                <a href="mailto:zaharlatfullin8@gmail.com" class="footer-link">
+                    <span style="display: inline-flex; align-items: center; gap: 6px;">
+                        <img src="images/email-icon.png" alt="Email" style="width: 18px; height: 18px; vertical-align: middle;"> Email
+                    </span>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
